@@ -1,0 +1,45 @@
+{
+  "expenses": [
+    {
+      "id": "9bf4",
+      "amount": 999,
+      "category": "電車賃",
+      "expenseDate": "06/25/2024"
+    },
+    {
+      "id": "151f",
+      "amount": 999,
+      "category": "買い物",
+      "expenseDate": "06/19/2024"
+    },
+    {
+      "id": "ca25",
+      "amount": 2542.93,
+      "category": "買い物",
+      "expenseDate": "06/27/2024"
+    },
+    {
+      "id": "73b7",
+      "amount": 2500,
+      "category": "買い物",
+      "expenseDate": "06/23/2024"
+    }
+  ],
+  "categories": [
+    {
+      "category_id": 1,
+      "category_name": "食事",
+      "id": "5b9e"
+    },
+    {
+      "category_id": 2,
+      "category_name": "買い物",
+      "id": "05ec"
+    },
+    {
+      "category_id": 3,
+      "category_name": "電車賃",
+      "id": "8f7a"
+    }
+  ]
+}
