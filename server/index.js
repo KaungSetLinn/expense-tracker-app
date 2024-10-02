@@ -186,9 +186,11 @@ app.get('/get-report-by-month', (req, res) => {
     const userId = req.query.userId;
     const month = req.query.month;
 
-    const sql = "SELECT SUM(amount) as amount, DAY(expense_date) as day FROM expense_summary WHERE user_id = ? AND MONTH(expense_date) = ? GROUP BY day(expense_date) ORDER BY expense_date ASC";
+    const year = new Date().getFullYear();
 
-    db.query(sql, [userId, month], (err, rows) => {
+    const sql = "SELECT SUM(amount) as amount, DAY(expense_date) as day FROM expense_summary WHERE user_id = ? AND MONTH(expense_date) = ? AND YEAR(expense_date) = ? GROUP BY day(expense_date) ORDER BY expense_date ASC";
+
+    db.query(sql, [userId, month, year], (err, rows) => {
         if (err)
             return err;
 
