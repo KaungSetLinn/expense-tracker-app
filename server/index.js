@@ -5,6 +5,10 @@ const path = require('path')
 
 const app = express()
 
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() }); // Use memoryStorage for simplicity
+
+
 app.use(express.static(path.join(__dirname, "public")))
 app.use(cors())
 app.use(express.json())
@@ -75,7 +79,7 @@ app.get('/expenses', (req, res) => {
         const totalCount = countResult[0].totalCount;
 
         // SQL query with pagination
-        const sql = "SELECT expense_id, amount, category_name, expense_note, expense_date FROM expense_summary WHERE user_id = ? ORDER BY expense_date DESC, expense_id DESC LIMIT ?, ?";
+        const sql = "SELECT expense_id, amount, category_name, expense_note, receipt, expense_date FROM expense_summary WHERE user_id = ? ORDER BY expense_date DESC, expense_id DESC LIMIT ?, ?";
         db.query(sql, [userId, offset, size], (err, rows) => {
             if (err) {
                 console.error('Error fetching expenses:', err);
@@ -163,21 +167,27 @@ app.get('/get_overall_expenses', (req, res) => {
     });
 });
 
-app.post('/add_expense', (req, res) => {
-    const sql = "INSERT INTO expense (amount, user_id, category_id, expense_note, expense_date) VALUES (?, ?, ?, ?, ?)";
+app.post('/add_expense', upload.single('receipt'), async (req, res) => {
+    const expense = JSON.parse(req.body.expense); // Parse the expense data
+    const receipt = req.file; // Get the uploaded file
 
+    // You can now save the receipt data to the database
+    const sql = 'INSERT INTO expense (amount, user_id, category_id, expense_note, expense_date, receipt) VALUES (?, ?, ?, ?, ?, ?)';
+    
+    const receiptBuffer = receipt ? receipt.buffer : null; // Get the file buffer
     const values = [
-        req.body.amount,
-        req.body.user_id,
-        req.body.category,
-        req.body.expenseNote,
-        req.body.expenseDate
-    ]
+        expense.amount,
+        expense.user_id,
+        expense.category,
+        expense.expenseNote,
+        expense.expenseDate,
+        receiptBuffer // Save the file buffer as BLOB
+    ];
 
     db.query(sql, values, (err, result) => {
         if (err)
             return res.json({message: "Something happened" + err})
-
+    
         return res.json({success: "Successful"})
     });
 });

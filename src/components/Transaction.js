@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPen, faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -19,6 +19,8 @@ const Transaction = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     const { userId } = useUser();
+
+    const imgRef = useRef(null);
 
     const handleShowDeleteModal = (expenseId) => {
         setExpenseToDelete(expenseId);
@@ -57,6 +59,7 @@ const Transaction = () => {
         try {
             const response = await axios.get(`http://localhost:3001/expenses?page=${currentPage}&size=${pageSize}&userId=${userId}`);
             setExpenses(response.data.data);
+            console.log(response.data.data)
             setTotalPages(response.data.totalPages);
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -67,6 +70,25 @@ const Transaction = () => {
         setCurrentPage(page);
         document.activeElement.blur();
     };
+
+    const arrayBufferToBase64 = (buffer) => {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    };
+
+    const handleImageClick = (imageData) => {
+        if (imgRef.current) {
+            const blob = new Blob([new Uint8Array(imageData)], { type: 'image/png' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+    };
+    
 
     const renderExpenses = () => {
         if (expenses.length === 0) {
@@ -89,7 +111,18 @@ const Transaction = () => {
                     <td className="text-end">{actualIndex}</td>
                     <td className="text-end">￥{expense.amount.toLocaleString()}</td>
                     <td className="text-end">{expense.category_name}</td>
-                    <td className="text-end">{expense.expense_note}</td>
+                    <td className="text-end">
+                        {expense.receipt && (
+                            <img 
+                                ref={imgRef}
+                                src={`data:image/png;base64,${arrayBufferToBase64(expense.receipt.data)}`} 
+                                alt="Receipt" 
+                                style={{ width: '50px', height: 'auto', cursor: 'pointer' }} // Adjust the size as needed
+                                onClick={() => handleImageClick(expense.receipt.data)}
+                            />
+                        )}
+                    </td>
+
                     <td className="text-end">{formattedDate}</td>
                     <td className="text-end">
                         <Link to={`/expense/${expense.expense_id}`} style={{ textDecoration: 'none' }}>
@@ -102,6 +135,7 @@ const Transaction = () => {
                         </button>
                     </td>
                 </tr>
+
             );
         });
     };
@@ -114,7 +148,7 @@ const Transaction = () => {
                         <th scope="col" className="text-end">#</th>
                         <th scope="col" className="text-end">金額</th>
                         <th scope="col" className="text-end">カテゴリ</th>
-                        <th scope="col" className="text-end">追加ノート</th>
+                        <th scope="col" className="text-end">領収書</th>
                         <th scope="col" className="text-end">日付</th>
                         <th scope="col" className="text-end">操作</th>
                     </tr>

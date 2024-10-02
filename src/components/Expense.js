@@ -29,6 +29,8 @@ const Expense = () => {
 
     const { userId } = useUser();
 
+    const [receiptFile, setReceiptFile] = useState(null);
+
     const fetchData = async () => {
         try {
             const response = await axios.get('http://localhost:3001/category');
@@ -84,7 +86,7 @@ const Expense = () => {
         event.preventDefault();
         
         const formattedDate = selectedDate.format('YYYY/MM/DD');
-    
+        
         const newExpense = {
             amount: parseInt(amount),
             user_id: userId,
@@ -92,27 +94,43 @@ const Expense = () => {
             expenseNote: expenseNote ? expenseNote : null,
             expenseDate: formattedDate
         };
+        
+        const formData = new FormData();
+        formData.append('expense', JSON.stringify(newExpense));
+        if (receiptFile) {
+            formData.append('receipt', receiptFile);
+        }
     
         try {
             if (editMode) {
-                await axios.put(`http://localhost:3001/expense/${expenseId}`, newExpense);
+                await axios.put(`http://localhost:3001/expense/${expenseId}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
                 setSuccessMessage('支出が正常に更新されました！');
             } else {
-                await axios.post('http://localhost:3001/add_expense', newExpense);
+                const response = await axios.post('http://localhost:3001/add_expense', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+                console.log(response)
                 setSuccessMessage('支出が正常に保存されました！');
             }
     
             // Reset form fields
-            setAmount(''); // Set to empty string for NumericFormat
+            setAmount('');
             setSelectedCategory(null);
-            setSelectedDate(dayjs()); // Reset date to current date
+            setSelectedDate(dayjs());
             setExpenseNote('');
+            setReceiptFile(null); // Reset file input
             setShowModal(true);
     
         } catch (error) {
             console.error('Error saving expense:', error);
         }
-    };
+    };    
     
 
     return (
@@ -123,61 +141,66 @@ const Expense = () => {
                         <h3 className='bg-light mb-4'>{editMode ? "支出を編集" : "支出を追加"}</h3>
 
                         <form onSubmit={handleSubmit}>
-                            <div className="mb-3" style={{ display: 'flex', alignItems: 'center' }}>
-                                <label htmlFor="amount" style={{ marginRight: '1rem' }}>金額(￥):</label>
+                            <div className="mb-3 mx-3" style={{ display: 'flex', alignItems: 'center' }}>
+                                <label htmlFor="amount" style={{ marginRight: '1rem', width: '80px' }}>金額(￥):</label>
                                 <NumericFormat
                                     id='amount'
                                     name='amount'
                                     className='form-control'
                                     thousandSeparator={true}
-                                    decimalScale={0} // Adjust decimal scale as needed
+                                    decimalScale={0}
                                     allowNegative={false}
                                     onValueChange={handleAmountChange}
                                     onFocus={e => e.target.select()}
                                     placeholder="例：1,000"
                                     value={amount}
-                                    style={{ flex : 1 }}
+                                    style={{ flex: 1, maxWidth: '250px' }} // Set max-width
                                 />
                             </div>
 
-                            <div className="mb-3" style={{ display: 'flex', alignItems: 'center' }}>
-                                <label htmlFor="category" style={{ marginRight: '2rem' }}>カテゴリ:</label>
+                            <div className="mb-3 mx-3" style={{ display: 'flex', alignItems: 'center' }}>
+                                <label htmlFor="category" style={{ marginRight: '2rem', width: '65px' }}>カテゴリ:</label>
                                 <Select
                                     options={categories}
                                     onChange={handleCategoryChange}
                                     value={categories.find(cat => cat.value === selectedCategory) || null}
                                     isSearchable={true}
                                     placeholder="カテゴリを選択してください"
-                                    styles={{ container: (provided) => ({ ...provided, flex: 1 }) }}
+                                    styles={{ container: (provided) => ({ ...provided, flex: 1, maxWidth: '250px' }) }} // Set max-width
                                 />
                             </div>
 
                             <div className="mb-3" style={{ display: 'flex', alignItems: 'center' }}>
-                                <label htmlFor="expenseNote" style={{ marginRight: '1rem' }}>追加ノート:</label>
+                                <label htmlFor="receipt" style={{ marginRight: '1rem', width: '100px' }}>領収書:</label>
                                 <input 
-                                    type='text' 
-                                    className='form-control' 
-                                    id='expenseNote' 
-                                    onChange={e => setExpenseNote(e.target.value)}
-                                    value={expenseNote}
-                                    style={{ flex: 1 }}
+                                    type="file"
+                                    className="form-control"
+                                    id="receipt"
+                                    accept="image/*"
+                                    onChange={e => {
+                                        setReceiptFile(e.target.files[0]);
+                                        console.log(receiptFile);
+                                    }}
+                                    style={{ flex: 1, maxWidth: '220px' }} // Set max-width
                                 />
                             </div>
 
                             <div className="mb-3" style={{ display: 'flex', alignItems: 'center' }}>
-                                <label htmlFor="staticEmail" style={{ marginRight: '1rem' }}>日付:</label>
-                                <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='ja'>
-                                    <MobileDatePicker
-                                        className='form-control'
-                                        value={selectedDate}
-                                        onChange={handleDateChange}
-                                        renderInput={(params) => <TextField {...params} style={{ flex: 1 }} />}
-                                        format='DD/MM/YYYY'
-                                    />
-                                </LocalizationProvider>
+                                <label htmlFor="staticEmail" style={{ marginRight: '1rem', width: '96px' }}>日付:</label>
+                                <div>
+                                    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale='ja'>
+                                        <MobileDatePicker
+                                            className='form-control'
+                                            value={selectedDate}
+                                            onChange={handleDateChange}
+                                            renderInput={(params) => <TextField {...params} style={{ flex: 1, maxWidth: '250px' }} />}
+                                            format='DD/MM/YYYY'
+                                        />
+                                    </LocalizationProvider>
+                                </div>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }} className='mx-4'>
                                 <button type="submit" className="btn btn-primary">保存</button>
                             </div>
 
@@ -188,6 +211,7 @@ const Expense = () => {
                 </div>
             </div>
         </div>
+
     );
 };
 
