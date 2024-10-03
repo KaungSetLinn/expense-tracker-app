@@ -16,31 +16,20 @@ import { UserProvider, useUser } from './components/UserContext';
 
 function App() {
     const [user, setUser] = useState(null);
-    const [userData, setUserData] = useState({}); 
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
-
     const { setUserId } = useUser();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            console.log("unsubscribe function is called");
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            console.log("useEffect executed");
             if (user) {
                 if (user.emailVerified) {
-                    
                     setUser(user);
-                    console.log(user);
-
                     setUserId(user.uid);
-
-                    // setUserData({user_id : user.uid});
-
-                    // Fetch user data from your database
-                    // Example: const userData = await fetchUserData(user.uid);
-                    // setUserData(userData);
                 }
             } else {
-                setUserData(null);
+                setUser(null);
             }
             setLoading(false);
         });
@@ -52,37 +41,41 @@ function App() {
         return <LoadingScreen />;
     }
 
-    const handleLogin = (user) => {
-        setUser(user);
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            setUser(null);
+            navigate('/');
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
     };
 
-    const handleLogout = async () => {
-        setUser(null);
-        await signOut(auth);
-        console.log('User logged out successfully');
-        navigate('/');
+    const handleLogin = (user) => {
+        setUser(user);
+        setUserId(user.uid);
     };
 
     return (
-            <div className='App'>
-                {user ? (
-                    <>
-                        <Navbar user={user} /> {/* Pass user data to Navbar */}
-                        <Routes>
-                            <Route path="/" element={<Dashboard />} /> 
-                            <Route path="/transaction" element={<Transaction />} /> 
-                            <Route path="/expense/:expenseId?" element={<Expense />} /> 
-                            <Route path='/report' element={<Report />} /> 
-                            <Route path="/account" element={<Account userData={userData} logout={handleLogout} />} />
-                        </Routes>
-                    </>
-                ) : (
+        <div className='App'>
+            {user ? (
+                <>
+                    <Navbar user={user} />
                     <Routes>
-                        <Route path="/" element={<LoginForm onLogin={handleLogin} />} />
-                        <Route path="/signup" element={<SignupForm />} /> 
+                        <Route path="/" element={<Dashboard />} /> 
+                        <Route path="/transaction" element={<Transaction />} /> 
+                        <Route path="/expense/:expenseId?" element={<Expense />} /> 
+                        <Route path="/report" element={<Report />} /> 
+                        <Route path="/account" element={<Account logout={handleLogout} />} />
                     </Routes>
-                )}
-            </div>
+                </>
+            ) : (
+                <Routes>
+                    <Route path="/" element={<LoginForm onLogin={handleLogin} />} />
+                    <Route path="/signup" element={<SignupForm />} /> 
+                </Routes>
+            )}
+        </div>
     );
 }
 

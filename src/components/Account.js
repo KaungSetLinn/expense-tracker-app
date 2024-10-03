@@ -5,7 +5,7 @@ import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, update
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
-const Account = ({ userData, logout }) => {
+const Account = ({ logout }) => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [newUsername, setNewUsername] = useState('');

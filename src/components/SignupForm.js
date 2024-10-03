@@ -263,7 +263,7 @@ const SignupForm = () => {
                 </div>
             </div>) : (
                 <div className='loading-container'>
-                    <span>Verification email sent. Please check your email.</span>
+                    <span>確認メールが送信されました。メールをチェックしてください。</span>
                     <Link to={"/"}>ログイン画面へ戻る</Link>
                 </div>
             )}
