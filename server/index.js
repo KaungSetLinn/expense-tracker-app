@@ -99,30 +99,29 @@ app.get('/expenses', (req, res) => {
 
 app.get('/expense/:expenseId', (req,res) => {
     const expenseId = req.params.expenseId;
-    const sql = "SELECT amount, category_id, expense_note, expense_date FROM expense WHERE expense_id = ?";
+    const sql = "SELECT amount, category_id, expense_note, expense_date, receipt FROM expense WHERE expense_id = ?";
 
     db.query(sql, [expenseId], (err, rows) => {
         res.json(rows);
     });
 });
 
-app.put('/expense/:expenseId', (req, res) => {
+app.put('/expense/:expenseId', upload.single('receipt'), (req, res) => {
     const expenseId = req.params.expenseId;
-    const sql = "UPDATE expense SET amount = ?, category_id = ?, expense_note = ?, expense_date = ? WHERE expense_id = ?";
+    const { amount, category, expenseDate } = JSON.parse(req.body.expense); // Parse the expense data
 
-    const values = [
-        req.body.amount,
-        req.body.category,
-        req.body.expenseNote,
-        req.body.expenseDate,
-        expenseId
-    ]
+    const receipt = req.file; // Get the uploaded file
+
+    const receiptBuffer = receipt ? receipt.buffer : null; // Get the file buffer
+
+    const sql = "UPDATE expense SET amount = ?, category_id = ?, expense_date = ?, receipt = ? WHERE expense_id = ?";
+    const values = [amount, category, expenseDate, receiptBuffer, expenseId];
 
     db.query(sql, values, (err, result) => {
-        if (err)
-            return res.json({message: "Something happened" + err})
-
-        return res.json({success: "Successful"})
+        if (err) {
+            return res.status(500).json({ message: "Something happened: " + err });
+        }
+        return res.json({ success: "Successful" });
     });
 });
 

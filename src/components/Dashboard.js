@@ -126,7 +126,7 @@ const Dashboard = () => {
                 <div className="col-md-4 mb-3">
                     <div className="card text-bg-light">
                         <div className="card-body">
-                        <Link to="/transaction" style={{ textDecoration: 'none' }}>
+                        <Link to="/report" style={{ textDecoration: 'none' }}>
                             <FontAwesomeIcon icon={faChartPie} size="3x" className="text-info" />
                             <p className="card-text mt-2 text-dark">支出の分布</p>
                         </Link>
