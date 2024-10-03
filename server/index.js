@@ -172,14 +172,13 @@ app.post('/add_expense', upload.single('receipt'), async (req, res) => {
     const receipt = req.file; // Get the uploaded file
 
     // You can now save the receipt data to the database
-    const sql = 'INSERT INTO expense (amount, user_id, category_id, expense_note, expense_date, receipt) VALUES (?, ?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO expense (amount, user_id, category_id, expense_date, receipt) VALUES (?, ?, ?, ?, ?)';
     
     const receiptBuffer = receipt ? receipt.buffer : null; // Get the file buffer
     const values = [
         expense.amount,
         expense.user_id,
         expense.category,
-        expense.expenseNote,
         expense.expenseDate,
         receiptBuffer // Save the file buffer as BLOB
     ];

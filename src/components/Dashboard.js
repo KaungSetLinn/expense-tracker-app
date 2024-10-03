@@ -137,8 +137,8 @@ const Dashboard = () => {
                 <div className="col-md-7">
                     <div className="card">
                         <div className="card-body">
-                            <h5 className="card-title">全体の支出</h5>
-                            {chartData.length > 0 ? <BarChart chartData={chartData} /> : <div>No data</div>}
+                            <h5 className="card-title fw-bolder">全体の支出</h5>
+                            {chartData.length > 0 ? <BarChart chartData={chartData} /> : <div>データなし</div>}
                             
                         </div>
                     </div>
@@ -147,8 +147,8 @@ const Dashboard = () => {
                 <div className="col-md-5">
                     <div className="card">
                         <div className="card-body">
-                            <h5 className="card-title">全体の支出</h5>
-                            {chartData.length > 0 ? <PieChart chartData={chartData} /> : <div>No data</div>}
+                            <h5 className="card-title fw-bolder">全体の支出</h5>
+                            {chartData.length > 0 ? <PieChart chartData={chartData} /> : <div>データなし</div>}
                         </div>
                     </div>
                 </div>

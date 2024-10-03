@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { LocalizationProvider, MobileDatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -16,7 +16,6 @@ const Expense = () => {
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedDate, setSelectedDate] = useState(dayjs()); // Initialize with current date
-    const [expenseNote, setExpenseNote] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
     const [showModal, setShowModal] = useState(false);
@@ -30,6 +29,8 @@ const Expense = () => {
     const { userId } = useUser();
 
     const [receiptFile, setReceiptFile] = useState(null);
+
+    const fileInputRef = useRef(null);
 
     const fetchData = async () => {
         try {
@@ -48,15 +49,11 @@ const Expense = () => {
 
                 const amount = expenseData.data[0].amount;
                 const categoryId = expenseData.data[0].category_id;
-                const expenseNote = expenseData.data[0].expense_note;
                 const expenseDate = expenseData.data[0].expense_date;
                 
                 setAmount(amount);
                 setSelectedCategory(categoryId);
                 setSelectedDate(dayjs(expenseDate));
-                
-                if (expenseNote !== null)
-                    setExpenseNote(expenseNote);
             };
         } catch (error) {
             console.error('Error fetching data:', error);
@@ -82,6 +79,13 @@ const Expense = () => {
         setSelectedDate(date);
     };
 
+    const handleFileChange = event => {
+        setReceiptFile(event.target.files[0]);
+
+        if (fileInputRef.current)
+            fileInputRef.current.blur();
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         
@@ -91,7 +95,6 @@ const Expense = () => {
             amount: parseInt(amount),
             user_id: userId,
             category: parseInt(selectedCategory),
-            expenseNote: expenseNote ? expenseNote : null,
             expenseDate: formattedDate
         };
         
@@ -123,8 +126,11 @@ const Expense = () => {
             setAmount('');
             setSelectedCategory(null);
             setSelectedDate(dayjs());
-            setExpenseNote('');
             setReceiptFile(null); // Reset file input
+
+            if (fileInputRef.current)
+                fileInputRef.current.value = '';
+
             setShowModal(true);
     
         } catch (error) {
@@ -177,10 +183,8 @@ const Expense = () => {
                                     className="form-control"
                                     id="receipt"
                                     accept="image/*"
-                                    onChange={e => {
-                                        setReceiptFile(e.target.files[0]);
-                                        console.log(receiptFile);
-                                    }}
+                                    ref={fileInputRef}
+                                    onChange={handleFileChange}
                                     style={{ flex: 1, maxWidth: '220px' }} // Set max-width
                                 />
                             </div>

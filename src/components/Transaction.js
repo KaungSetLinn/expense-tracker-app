@@ -10,41 +10,37 @@ import BootstrapModal from "./BootstrapModal";
 const Transaction = () => {
     const [expenses, setExpenses] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [pageSize] = useState(10); // Number of items per page
+    const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
-    const [showDeleteModal, setshowDeleteModal] = useState(false);
-    const [expenseToDelete, setExpenseToDelete] = useState(null); // Track which expense to delete
-
-    const [showSuccessModal, setshowSuccessModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [expenseToDelete, setExpenseToDelete] = useState(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [successMessage, setSuccessMessage] = useState('');
+    const [loading, setLoading] = useState(true); // Loading state
 
     const { userId } = useUser();
-
     const imgRef = useRef(null);
 
     const handleShowDeleteModal = (expenseId) => {
         setExpenseToDelete(expenseId);
-        setshowDeleteModal(true);
+        setShowDeleteModal(true);
     };
 
     const handleCloseDeleteModal = () => {
-        setshowDeleteModal(false);
+        setShowDeleteModal(false);
         setExpenseToDelete(null);
     };
 
-    const handleCloseSuccessModal = () => setshowSuccessModal(false);
+    const handleCloseSuccessModal = () => setShowSuccessModal(false);
 
     const handleDeleteExpense = async () => {
         if (expenseToDelete) {
             try {
-                const response = await axios.delete(`http://localhost:3001/expenses?expenseId=${expenseToDelete}`);
-                console.log(response);
-                fetchData(); // Refresh the data after deletion
+                await axios.delete(`http://localhost:3001/expenses?expenseId=${expenseToDelete}`);
+                fetchData();
                 handleCloseDeleteModal();
-
-                // display the message that the expense has been successfully deleted
                 setSuccessMessage('支出が正常に削除されました！');
-                setshowSuccessModal(true);
+                setShowSuccessModal(true);
             } catch (error) {
                 console.error('Error deleting expense:', error);
             }
@@ -56,13 +52,15 @@ const Transaction = () => {
     }, [currentPage, pageSize]);
 
     const fetchData = async () => {
+        setLoading(true); // Start loading
         try {
             const response = await axios.get(`http://localhost:3001/expenses?page=${currentPage}&size=${pageSize}&userId=${userId}`);
             setExpenses(response.data.data);
-            console.log(response.data.data)
             setTotalPages(response.data.totalPages);
         } catch (error) {
             console.error('Error fetching data:', error);
+        } finally {
+            setLoading(false); // End loading
         }
     };
 
@@ -74,21 +72,17 @@ const Transaction = () => {
     const arrayBufferToBase64 = (buffer) => {
         let binary = '';
         const bytes = new Uint8Array(buffer);
-        const len = bytes.byteLength;
-        for (let i = 0; i < len; i++) {
+        for (let i = 0; i < bytes.byteLength; i++) {
             binary += String.fromCharCode(bytes[i]);
         }
         return btoa(binary);
     };
 
     const handleImageClick = (imageData) => {
-        if (imgRef.current) {
-            const blob = new Blob([new Uint8Array(imageData)], { type: 'image/png' });
-            const url = URL.createObjectURL(blob);
-            window.open(url, '_blank');
-        }
+        const blob = new Blob([new Uint8Array(imageData)], { type: 'image/png' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
     };
-    
 
     const renderExpenses = () => {
         if (expenses.length === 0) {
@@ -117,12 +111,11 @@ const Transaction = () => {
                                 ref={imgRef}
                                 src={`data:image/png;base64,${arrayBufferToBase64(expense.receipt.data)}`} 
                                 alt="Receipt" 
-                                style={{ width: '50px', height: 'auto', cursor: 'pointer' }} // Adjust the size as needed
+                                style={{ width: '50px', height: 'auto', cursor: 'pointer' }} 
                                 onClick={() => handleImageClick(expense.receipt.data)}
                             />
                         )}
                     </td>
-
                     <td className="text-end">{formattedDate}</td>
                     <td className="text-end">
                         <Link to={`/expense/${expense.expense_id}`} style={{ textDecoration: 'none' }}>
@@ -135,7 +128,6 @@ const Transaction = () => {
                         </button>
                     </td>
                 </tr>
-
             );
         });
     };
@@ -154,7 +146,15 @@ const Transaction = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {renderExpenses()}
+                    {loading ? (
+                        <tr>
+                            <td colSpan="6" className="text-center">
+                                読み込み中...
+                            </td>
+                        </tr>
+                    ) : (
+                        renderExpenses()
+                    )}
                 </tbody>
             </table>
             <div className="row">
