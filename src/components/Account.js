@@ -66,6 +66,9 @@ const Account = ({ logout }) => {
         setEditPassword(false);
         setCurrentPassword('');
         setNewPassword('');
+
+        setIsCurrentPasswordVisible(false);
+        setIsNewPasswordVisible(false);
     };
 
     const validatePasswords = () => {
